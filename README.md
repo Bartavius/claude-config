@@ -81,9 +81,11 @@ like. It matches only where a command starts: after a separator, `$(`, `-c`, `ev
 options (`sudo -u root`, `timeout 5`, `env -i`), and path or backslash prefixes
 (`/usr/bin/env`, `\env`). So `ls env`, `python -m venv env` and `rg 'export' src/`
 still run. It exists because permission deny rules only match exact command prefixes,
-so `CLAUDE.md` was the only thing stopping `echo $VAR`. Written for bash 3.2 with BSD
-`grep`/`sed`, no `jq` or `python`, and adds about 20 ms per command. `bash
-tests/block-secrets.test.sh` covers 90 cases.
+so `CLAUDE.md` was the only thing stopping `echo $VAR`. Heredoc bodies such as PR
+descriptions and commit messages are treated as text, unless the heredoc feeds a shell
+(`bash <<EOF`, `| sh`). Written for bash 3.2 with BSD `grep`/`sed`/`awk`, no `jq` or
+`python`, and adds about 20 ms per command. `bash tests/block-secrets.test.sh` covers
+97 cases.
 
 It's a guard rail, not a sandbox. Known gaps:
 
@@ -92,6 +94,7 @@ It's a guard rail, not a sandbox. Known gaps:
 - a script file that reads the environment, and interpreters it doesn't list.
 - wrapper forms it doesn't parse, such as `sudo` options whose value looks like a
   command.
+- heredocs sent to a remote shell (`ssh host <<EOF`), whose body is treated as text.
 
 Known false positives: any `echo` of an uppercase variable, including harmless ones
 like `$HOME` or `${PIPESTATUS[0]}`, and `grep -c "set"`-style arguments.

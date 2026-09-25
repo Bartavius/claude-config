@@ -116,6 +116,14 @@ allow 'git commit -m \"printenv support\"'
 allow 'git commit -m \"docs: echo $HOME example\"'
 allow 'declare -x FOO=1'
 allow 'cp .env.example .env'
+# Heredoc bodies are data unless they feed a shell.
+allow "gh pr create --body-file - <<'EOF'\nIt also blocks echo \$HOME and printenv.\nEOF"
+allow 'git commit -F - <<EOF\nDocs: cat .env and env examples\nEOF'
+allow 'cat > notes.md <<-EOF\n\techo $SECRET\n\tEOF'
+block 'bash <<EOF\nenv\nEOF'
+block 'cat <<EOF | sh\nprintenv\nEOF'
+block 'cat <<EOF\nhello\nEOF\nprintenv'
+block 'cat <<< x; printenv'
 check 0 '{ "session_id": "abc", "cwd": "/tmp", "tool_name": "Bash", "tool_input": { "command": "ls", "description": "List env files" } }'
 check 0 ''
 

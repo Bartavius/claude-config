@@ -15,7 +15,7 @@
 # Contract: exit 2 + a one-line reason on stderr blocks the tool call and
 # feeds the reason back to Claude. Exit 0 allows it silently.
 #
-# Must run under bash 3.2 (macOS) using only grep -E, sed -E and tr -- no
+# Must run under bash 3.2 (macOS) using only grep -E, sed -E, awk and tr -- no
 # jq, python, mapfile, associative arrays, \b, or GNU-only \| in EREs.
 # BSD grep also mis-matches a `^` alternative nested in an optional group
 # mid-pattern, so `^` appears only in the leading command-start group.
@@ -48,6 +48,42 @@ fi
 # therefore arrives here as two backslashes.
 cmd="$(printf '%s' "$cmd" | sed -E 's/\\"/"/g')"
 
+# Heredoc bodies are data, not commands (PR bodies, commit messages, scripts), so
+# the command-position rules scan a copy with the body lines blanked. The body is
+# kept when the heredoc feeds a shell (`bash <<EOF`, `... | sh`), and rule 5 still
+# scans the full command, so `python3 - <<EOF ... os.environ` is still caught.
+# Lines are split on the JSON `\n` escape only; an escaped backslash (`\\`) is
+# kept as-is, so `printf '%s\\n'` stays on one line.
+scan="$(printf '%s' "$cmd" | awk -v q="'" '
+  { s = s (NR > 1 ? "\n" : "") $0 }
+  END {
+    n = 0; cur = ""; i = 1; L = length(s)
+    while (i <= L) {
+      c = substr(s, i, 1)
+      if (c == "\\" && i < L) {
+        d = substr(s, i + 1, 1)
+        if (d == "n") { lines[++n] = cur; cur = "" } else { cur = cur c d }
+        i += 2; continue
+      }
+      cur = cur c; i++
+    }
+    lines[++n] = cur
+    delim = ""
+    for (k = 1; k <= n; k++) {
+      line = lines[k]
+      if (delim != "") {
+        t = line; sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
+        if (t == delim) delim = ""; else line = ""
+      } else if (match(line, "<<-?[ \t]*[\"" q "]?[A-Za-z_][A-Za-z0-9_]*") \
+                 && substr(line, RSTART - 1, 1) != "<" \
+                 && line !~ /(^|[;&|( \t])(ba|z|da|k)?sh([ \t]|$)/) {
+        delim = substr(line, RSTART, RLENGTH)
+        sub("^<<-?[ \t]*[\"" q "]?", "", delim)
+      }
+      printf "%s%s", (k > 1 ? "\\n" : ""), line
+    }
+  }')"
+
 # Command position. A command starts at the start of the string, after a
 # separator, subshell or backtick, after a literal \n, after `-c`/`eval` (with an
 # optional opening quote), or after `-exec`. Before the command word there can be
@@ -73,7 +109,9 @@ block() {
   exit 2
 }
 
-matches() { printf '%s' "$cmd" | grep -qE "$1"; }
+# matches scans the heredoc-stripped copy; matches_full scans everything.
+matches() { printf '%s' "$scan" | grep -qE "$1"; }
+matches_full() { printf '%s' "$cmd" | grep -qE "$1"; }
 
 # --- Rule 1: env / printenv -------------------------------------------
 # printenv blocks with or without arguments. env blocks when it only has
@@ -107,7 +145,7 @@ fi
 # the command: covers -c/-e flags in any order, and heredoc scripts.
 INTERP='(python[0-9.]*|node|ruby[0-9.]*|perl[0-9.]*|deno|bun|php|awk|gawk|Rscript|lua)'
 RULE5_ENV='environ|getenv|process\.env|process\[|ENV([^A-Za-z0-9_]|$)|ENVIRON|\$_(ENV|SERVER)|Deno\.env|Bun\.env|Sys\.getenv|["'"'"'/]\.env'
-if matches "${C}${INTERP}${E}" && matches "$RULE5_ENV"; then
+if matches "${C}${INTERP}${E}" && matches_full "$RULE5_ENV"; then
   block "reads environment values via an interpreter (os.environ/process.env/ENV/getenv). Refer to the variable by name and ask the user."
 fi
 
