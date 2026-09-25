@@ -10,16 +10,18 @@ git clone https://github.com/Bartavius/claude-config.git ~/Desktop/projects/clau
 ~/Desktop/projects/claude-config/install.sh
 ```
 
-`install.sh` symlinks `CLAUDE.md` and `settings.json` into `~/.claude/`, moving any
-existing file aside as `*.bak.<timestamp>`. Start a new session and run `/status` to
-confirm the settings loaded.
+`install.sh` symlinks each file below into the matching place under `~/.claude/`,
+moving anything already at that path aside as `*.bak.<timestamp>`. Skills are linked
+one directory at a time, so skills you already have are left alone. Start a new
+session and run `/status` and `/agents` to confirm everything loaded.
 
 ## What's here and why
 
 **`settings.json`**
 
-- `model: opus[1m]` — Opus with the 1M-token window as the main model. Projects route
-  execution to cheaper models through their own subagent definitions.
+- `model: opus[1m]` — Opus with the 1M-token window for the main conversation.
+- `CLAUDE_CODE_SUBAGENT_MODEL: sonnet` — subagents without their own `model` run on
+  Sonnet instead of inheriting Opus.
 - `disableClaudeAiConnectors` — stops claude.ai connectors from syncing into every
   session. Unused connectors still cost context through their tool listings.
 - `attribution` — empty strings remove the co-author trailer from commits and the
@@ -27,14 +29,33 @@ confirm the settings loaded.
 - `permissions.deny` — blocks reading `.env` files and dumping the environment
   (`env`, `printenv`, `export -p`). Secrets that enter the context can't be removed.
 
-**`CLAUDE.md`** — the two rules that hold in every project: never read environment
-variable values, never add AI attribution. Everything project-specific belongs in that
-project's own `CLAUDE.md` and `.claude/` directory.
+**`CLAUDE.md`** — rules for every project: no reading environment variable values, no
+AI attribution, when to delegate, and what `/compact` should keep.
+
+**`agents/`** — plan with the strongest model, execute and search with cheaper ones.
+
+- `planner` — Opus 5.5, read-only. Returns goal, shared contracts, and file-disjoint
+  slices, each with a verification command.
+- `implementer` — Sonnet. Builds one slice, touches only its files, reports the real
+  verification result.
+- `Explore` — Haiku, read-only, skips loading `CLAUDE.md`. Replaces the built-in
+  Explore, which otherwise runs on the main conversation's model.
+
+**`commands/orchestrate.md`** — `/orchestrate <task>`: planner → your approval →
+parallel implementers → full verification.
+
+**`skills/`** — `handoff` writes `HANDOFF.md` (goal, findings, dead ends, next action)
+so the next session starts without re-deriving anything; `handoff-read` checks it
+against the repo and resumes.
+
+A project's own `.claude/agents/` or `.claude/commands/` file with the same name
+overrides these, which is the place for repo-specific variants.
 
 ## Not included
 
-- `~/.claude/projects/`, `history.jsonl`, sessions, and caches — per-machine state that
-  holds conversation transcripts.
-- Skills synced from a claude.ai account — they arrive with the account.
+- `~/.claude/projects/` (auto-memory), `history.jsonl`, sessions, and caches —
+  per-machine state that holds project details and conversation transcripts.
+- Skills synced from a claude.ai account — they arrive with the account, and several
+  are licensed "all rights reserved".
 - The `caveman` skill — third-party and unlicensed, so install it from its source and
   put it in `~/.claude/skills/caveman/`.

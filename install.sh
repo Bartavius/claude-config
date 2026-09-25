@@ -1,23 +1,31 @@
 #!/usr/bin/env bash
 # Symlink this repo's files into ~/.claude so edits on either side stay in sync.
-# Existing files are moved aside with a timestamped .bak suffix, never overwritten.
+# Each agent, command, and skill is linked on its own, so anything already in those
+# directories (synced or third-party skills) is left alone. Existing files at a target
+# path are moved aside with a timestamped .bak suffix, never overwritten.
 set -euo pipefail
 
 repo="$(cd "$(dirname "$0")" && pwd)"
 target="$HOME/.claude"
 stamp="$(date +%Y%m%d%H%M%S)"
-mkdir -p "$target"
 
-for f in CLAUDE.md settings.json; do
-  dest="$target/$f"
-  if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$repo/$f" ]; then
+link() {
+  local src="$repo/$1" dest="$target/$1"
+  mkdir -p "$(dirname "$dest")"
+  if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
     echo "ok       $dest"
-    continue
+    return
   fi
   if [ -e "$dest" ] || [ -L "$dest" ]; then
     mv "$dest" "$dest.bak.$stamp"
     echo "backup   $dest.bak.$stamp"
   fi
-  ln -s "$repo/$f" "$dest"
-  echo "linked   $dest -> $repo/$f"
-done
+  ln -s "$src" "$dest"
+  echo "linked   $dest -> $src"
+}
+
+cd "$repo"
+link CLAUDE.md
+link settings.json
+for f in agents/*.md commands/*.md; do link "$f"; done
+for d in skills/*/; do link "${d%/}"; done
