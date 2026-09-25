@@ -48,6 +48,15 @@ parallel implementers → full verification.
 so the next session starts without re-deriving anything; `handoff-read` checks it
 against the repo and resumes.
 
+**`rules/`** — linked into `~/.claude/rules/`. A rule with `paths:` frontmatter loads
+only when Claude reads a file matching one of its globs. A rule without frontmatter
+loads every session, the same as `CLAUDE.md`. `claude-code-config.md` holds the
+conventions for writing agents, skills, commands, rules, and settings, and loads only
+when one of those files is opened. That keeps it out of every other session.
+
+This repo's own `.claude/rules/repo-layout.md` is not installed. It reminds Claude that
+edits here are global and that `install.sh` and this README need to stay in sync.
+
 A project's own `.claude/agents/` or `.claude/commands/` file with the same name
 overrides these, which is the place for repo-specific variants.
 
