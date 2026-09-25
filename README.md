@@ -6,7 +6,7 @@ My user-level [Claude Code](https://code.claude.com) setup — the files that li
 ## Install
 
 ```sh
-git clone https://github.com/<you>/claude-config.git ~/Desktop/projects/claude-config
+git clone https://github.com/Bartavius/claude-config.git ~/Desktop/projects/claude-config
 ~/Desktop/projects/claude-config/install.sh
 ```
 
