@@ -3,6 +3,7 @@ paths:
   - "agents/**"
   - "commands/**"
   - "skills/**"
+  - "hooks/**"
   - "rules/**"
   - "CLAUDE.md"
   - "settings.json"
@@ -13,7 +14,7 @@ paths:
 
 - Every file here is symlinked into `~/.claude/` by `install.sh`, so an edit changes
   every project's sessions right away. Treat edits as global.
-- A new agent, command, skill, or rule is picked up by the existing globs in
+- A new agent, command, skill, hook, or rule is picked up by the existing globs in
   `install.sh`. A new top-level file or directory needs a `link` line there.
 - Anything added or removed must also be updated in the README's "What's here and why"
   section, including the reason it exists.
