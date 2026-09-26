@@ -14,6 +14,7 @@
     "pr": ""
   },
   "permissions": {
+    "defaultMode": "default",
     "allow": [
       "Bash(git status)",
       "Bash(git status *)",
@@ -60,5 +61,20 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "hookify@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "caveman@caveman": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    }
   }
 }
