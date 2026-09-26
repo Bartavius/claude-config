@@ -14,7 +14,7 @@ Overlap key: **H** `handoff`, **R** `reviewer`, **P** `planner`/`challenger`,
 |---|---|---|---|---|
 | A code-intelligence (LSP) plugin for your main language | Go-to-definition and references replace grep plus reading many files. Anthropic's costs page lists this as a token saver. | varies | `/plugin`, then search your language | none |
 | [anthropics/skills](https://github.com/anthropics/skills) `document-skills` | Reading and writing docx/pdf/pptx/xlsx. Loaded only when a task involves one. | Apache-2.0, but the document skills are source-available | `/plugin marketplace add anthropics/skills` then `/plugin install document-skills@anthropic-agent-skills` | none |
-| [caveman](https://github.com/JuliusBrussee/caveman) | Terse output mode for long sessions where you want less prose. You invoke it; it never triggers on its own. | MIT (skill); BSL-1.1 (proxy) | `claude plugin marketplace add JuliusBrussee/caveman` then `claude plugin install caveman@caveman` | none (its bundled review/spec skills partly overlap R, P) |
+| [caveman](https://github.com/JuliusBrussee/caveman) | Terse output mode for long sessions where you want less prose. The plugin's `SessionStart` hook turns it on in every session unless `CAVEMAN_DEFAULT_MODE=off` (set in this repo's `settings.json`), so with that set you invoke it yourself. | MIT (skill); BSL-1.1 (proxy) | `claude plugin marketplace add JuliusBrussee/caveman` then `claude plugin install caveman@caveman` | none (its bundled review/spec skills partly overlap R, P) |
 
 ## Situational
 

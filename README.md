@@ -23,11 +23,15 @@ the same way, one script at a time. Start a new session and run `/status` and
 - `model: opus[1m]` — Opus with the 1M-token window for the main conversation.
 - `CLAUDE_CODE_SUBAGENT_MODEL: sonnet` — subagents without their own `model` run on
   Sonnet instead of inheriting Opus.
+- `CAVEMAN_DEFAULT_MODE: off` — the caveman plugin otherwise switches every session
+  to terse output at start; with this, it's on only when you invoke it.
 - `disableClaudeAiConnectors` — stops claude.ai connectors from syncing into every
   session. Unused connectors still cost context through their tool listings.
 - `statusLine` — runs `statusline.sh` (below), so context usage is always visible.
 - `attribution` — empty strings remove the co-author trailer from commits and the
   attribution line from PR descriptions.
+- `permissions.defaultMode: default` — sessions start in manual mode, asking before
+  edits and commands outside the allowlist. Switch modes per session with Shift+Tab.
 - `permissions.allow` — read-only commands (`git status`/`diff`/`log`/`show`/
   `ls-files`/`blame`/`rev-parse`, `git branch --show-current`, `ls`, `rg`, `wc`, `pwd`,
   `which`) that don't need a prompt every time, so approvals stay reserved for things
@@ -38,6 +42,10 @@ the same way, one script at a time. Start a new session and run `/status` and
   would let an otherwise read-only, allowed command write a file or run a program.
 - `hooks` — registers `block-secrets.sh` (see `hooks/` below) as a `PreToolUse` hook
   on `Bash`, so the secrets rule is enforced rather than just advised.
+- `enabledPlugins` / `extraKnownMarketplaces` — the third-party plugins from `SKILLS.md`
+  that are in use: `typescript-lsp` and `pyright-lsp` (go-to-definition instead of
+  grep), `hookify`, `security-guidance`, and `caveman`. Keeping them here means a fresh
+  machine gets the same set; `claude plugin install` writes these keys itself.
 
 **`CLAUDE.md`** — rules for every project: no reading environment variable values, no
 AI attribution, when to delegate, a definition of done (don't report finished until
@@ -103,6 +111,12 @@ threshold `CLAUDE.md` sets. Without it, that threshold can't be seen. Needs `jq`
 drawn from reference setups and production practice, and records the audits, the
 changes each one led to, and what was deliberately left out. It exists so changes to
 this config are judged against stated principles rather than taste.
+
+**`CONTRIBUTING.md`** — not installed. The checklist for any addition, edit, or
+removal: what a new component must prove, context budgets for what loads every
+session, how to remove things cleanly, and the checks to run before calling a change
+done. It exists so the setup stays small as it changes. `.claude/rules/repo-layout.md`
+points Claude to it when config files are edited.
 
 **`SKILLS.md`** — not installed. Third-party skills and plugins worth installing
 yourself, with license, install command, and which part of this setup each overlaps.
