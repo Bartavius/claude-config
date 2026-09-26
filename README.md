@@ -101,16 +101,20 @@ writer at a time. `test-first` runs a red/green loop: a test has to fail for the
 reason before any code is written, and the full suite runs at the end. `root-cause` goes
 reproduce → narrow → one hypothesis at a time → fix the root cause, and stops after two
 failed fixes. Both exist because verification, not code generation, is where agent
-output usually goes wrong (see `BENCHMARK.md` round 2).
+output usually goes wrong (see `BENCHMARK.md` principle 5).
 
 **`statusline.sh`** — shows the model, the directory, and how much of the context
 window is used (percent and tokens), and adds a `/clear` + handoff cue at 200k tokens, the
 threshold `CLAUDE.md` sets. Without it, that threshold can't be seen. Needs `jq`.
 
-**`BENCHMARK.md`** — not installed. Scores this setup against 10 design principles
-drawn from reference setups and production practice, and records the audits, the
-changes each one led to, and what was deliberately left out. It exists so changes to
-this config are judged against stated principles rather than taste.
+**`BENCHMARK.md`** — not installed. The criteria only: 10 design principles drawn from
+reference setups and production practice, each with a 1–5 rubric and the tests that
+decide it, plus the mechanical checks to run. It exists so changes to this config are
+judged against stated principles rather than taste.
+
+**`EVALUATION.md`** — not installed. The latest scores against `BENCHMARK.md`, with
+evidence, findings, and recommendations, plus a history of earlier rounds and what was
+deliberately left out. Kept apart so the criteria don't shift with each evaluation.
 
 **`CONTRIBUTING.md`** — not installed. The checklist for any addition, edit, or
 removal: what a new component must prove, context budgets for what loads every
@@ -167,8 +171,8 @@ overrides these, which is the place for repo-specific variants.
 
 ## Credits
 
-`BENCHMARK.md` compares this setup's design principles against two reference
-ecosystems; the entries below are what came out of that comparison.
+`BENCHMARK.md` draws its design principles partly from two reference ecosystems; the
+entries below are what came out of comparing this setup against them.
 
 ### Adapted with the author's permission
 
