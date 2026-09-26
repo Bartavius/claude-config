@@ -111,7 +111,8 @@ In the same change:
 - **README "What's here and why"**: add, update, or remove the entry, including the
   reason it exists.
 - **`SKILLS.md`**: any third-party skill or plugin, with its license and overlaps.
-- **`BENCHMARK.md`**: only when a change affects a principle or its score.
+- **`BENCHMARK.md`**: only when the criteria themselves change.
+- **`EVALUATION.md`**: when a change affects a principle's score.
 - **Credits**: where any borrowed text came from, with snapshot and license.
 
 ## 7. Scope discipline
