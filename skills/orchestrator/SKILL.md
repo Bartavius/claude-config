@@ -17,8 +17,8 @@ Match effort to risk. Do not escalate past what the task needs.
 | Level | When | Action |
 |-------|------|--------|
 | **0 — Direct** | Small, low-risk, single-file or obvious change | Just do it. No subagents. |
-| **1 — One advisor** | A plan or piece of reasoning needs pressure-testing, or a done diff needs a second opinion | One `challenger` for a plan/reasoning, or one `reviewer` for a diff |
-| **2 — Parallel review** | A non-trivial diff is done and quality matters | Several fresh-context `reviewer`s, each with a distinct angle, then synthesize |
+| **1 — One advisor** | A plan or piece of reasoning needs pressure-testing, or a done diff needs a second opinion | One `challenger` for a plan/reasoning, or one `reviewer` for a diff checked against requirements. With no requirements, the built-in `/code-review` bug sweep is enough |
+| **2 — Parallel review** | A non-trivial diff is done and quality matters | `/parallel-review`: three fresh-context `reviewer`s, each with a distinct angle, then synthesize |
 | **3 — Full loop** | Multi-step feature, cross-module change, or broad/risky work | `/orchestrate` — planner, approval, parallel implementers, verify, review, fix |
 
 When in doubt, prefer Level 0-1. Suggest a higher level rather than silently
@@ -29,7 +29,7 @@ spending tokens on it.
 ### Only implementers write
 One writer per file: only implementers dispatched by /orchestrate on file-disjoint
 slices write; every other subagent is read-only. `planner`, `challenger`,
-`reviewer`, and `Explore` inspect and advise but never edit. Never run two agents
+`reviewer`, `researcher`, and `Explore` inspect and advise but never edit. Never run two agents
 that could touch the same file concurrently — sequence anything sharing a file, a
 migration, or an API contract instead.
 

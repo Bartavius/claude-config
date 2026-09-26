@@ -19,7 +19,10 @@ Rules of engagement:
   now.
 - Match the surrounding file's idiom over any general preference.
 - Run the slice's verification command. If it fails and you cannot fix it inside your
-  slice, report the failure with its output.
+  slice, report the failure with its output. Other slices may be editing the same
+  working tree right now: an error in a file outside your slice is theirs to fix, so
+  report it and don't touch that file. Don't run formatters or `--fix` on anything
+  beyond your own files.
 
 Report back with: the files you changed, the verification command and its real result,
 and anything you hit that the plan did not anticipate. Keep it short — no summary of

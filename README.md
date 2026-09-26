@@ -25,6 +25,7 @@ the same way, one script at a time. Start a new session and run `/status` and
   Sonnet instead of inheriting Opus.
 - `disableClaudeAiConnectors` — stops claude.ai connectors from syncing into every
   session. Unused connectors still cost context through their tool listings.
+- `statusLine` — runs `statusline.sh` (below), so context usage is always visible.
 - `attribution` — empty strings remove the co-author trailer from commits and the
   attribution line from PR descriptions.
 - `permissions.allow` — read-only commands (`git status`/`diff`/`log`/`show`/
@@ -40,9 +41,14 @@ the same way, one script at a time. Start a new session and run `/status` and
 
 **`CLAUDE.md`** — rules for every project: no reading environment variable values, no
 AI attribution, when to delegate, a definition of done (don't report finished until
-the project's own checks have run and passed, output shown), the orchestration levels
-and the one-writer-per-file rule (see `skills/orchestrator`), and when to compact
-(around 65% full, or `/clear` plus a handoff between unrelated tasks).
+the project's own checks have run and passed, output shown), stopping after two failed
+fixes instead of trying a third variant, keeping bulky command output out of context
+(quiet flags, `tail`/grep, subagent summaries), and choosing the orchestration level
+by risk rather than file count. Also the one-writer-per-file rule (see
+`skills/orchestrator`), sending research to `researcher` rather than `general-purpose`,
+and `/clear` plus a handoff by around 200k tokens or between unrelated tasks. That
+threshold is in tokens because context quality tracks absolute size, not the percentage
+of a 1M window.
 
 **`agents/`** — plan with the strongest model, execute and search with cheaper ones,
 and verify with a fresh context that didn't write the code.
@@ -58,18 +64,48 @@ and verify with a fresh context that didn't write the code.
   evidence, instead of trusting the implementer's own account of the work.
 - `challenger` — Opus, read-only. Pressure-tests a plan, an analysis, or a piece of
   reasoning before it's acted on — not line-level code.
+- `researcher` — Sonnet, read-only, with web access. Returns a short brief on external
+  docs, APIs, licenses, or how others do something. Each finding has a source and date,
+  and is marked verified or secondhand. It exists so research doesn't need
+  `general-purpose`, which can write files.
 
-**`commands/orchestrate.md`** — `/orchestrate <task>`: planner → your approval →
-parallel implementers → full verification, then fresh-context review. The reviewer
-checks the diff against the original requirements; blockers get fixed and
-re-verified.
+**`commands/`**
+
+- `/orchestrate <task>` — planner → your approval → parallel implementers → full
+  verification, then fresh-context review. The reviewer checks the diff against the
+  original requirements; blockers get fixed and re-verified.
+- `/parallel-review [scope] [autofix]` — orchestration level 2 as a command: three
+  fresh-context reviewers, each with its own angle, sorted into fix now / optional /
+  ignore. It exists so a thorough review of finished work doesn't depend on Claude
+  choosing to do it.
+- `/fix-pr <pr>` — on an existing PR's branch, fixes unresolved review threads and
+  failing checks. It greps failed CI logs for the error lines instead of taking their
+  tail, because the tail is post-job cleanup. Then it verifies, and reports each
+  item as fixed, declined, or couldn't reproduce. It doesn't commit, push, or reply on
+  the PR unless you ask.
 
 **`skills/`** — `handoff` writes `HANDOFF.md` (goal, findings, dead ends, next action)
 so the next session starts without re-deriving anything; `handoff-read` checks it
 against the repo and resumes. `orchestrator` is a dial for picking the lowest
 orchestration level that fits — direct, one challenger or reviewer, several
 fresh-context reviewers, or full `/orchestrate` — plus the rule that each file has one
-writer at a time.
+writer at a time. `test-first` runs a red/green loop: a test has to fail for the right
+reason before any code is written, and the full suite runs at the end. `root-cause` goes
+reproduce → narrow → one hypothesis at a time → fix the root cause, and stops after two
+failed fixes. Both exist because verification, not code generation, is where agent
+output usually goes wrong (see `BENCHMARK.md` round 2).
+
+**`statusline.sh`** — shows the model, the directory, and how much of the context
+window is used (percent and tokens), and adds a `/clear` + handoff cue at 200k tokens, the
+threshold `CLAUDE.md` sets. Without it, that threshold can't be seen. Needs `jq`.
+
+**`BENCHMARK.md`** — not installed. Scores this setup against 10 design principles
+drawn from reference setups and production practice, and records the audits, the
+changes each one led to, and what was deliberately left out. It exists so changes to
+this config are judged against stated principles rather than taste.
+
+**`SKILLS.md`** — not installed. Third-party skills and plugins worth installing
+yourself, with license, install command, and which part of this setup each overlaps.
 
 **`hooks/`** — linked into `~/.claude/hooks/`. `block-secrets.sh` is a `PreToolUse`
 hook on `Bash` that blocks commands printing environment values (`env`, `printenv`,
@@ -122,10 +158,17 @@ ecosystems; the entries below are what came out of that comparison.
 
 ### Adapted with the author's permission
 
-`agents/reviewer.md`, `agents/challenger.md`, and `skills/orchestrator/SKILL.md` are
-adapted, with permission, from Anish Sahoo's
+`agents/reviewer.md`, `agents/challenger.md`, `agents/researcher.md`,
+`commands/parallel-review.md`, `commands/fix-pr.md`, and `skills/orchestrator/SKILL.md`
+are adapted, with permission, from Anish Sahoo's
 [agents-ecosystem](https://github.com/anish-sahoo/agents-ecosystem) (snapshot
-`70118dd`).
+`70118dd`). His permission covers the whole repo. `researcher`, `parallel-review`, and
+`fix-pr` were rewritten rather than copied:
+
+- `researcher` marks each finding verified or secondhand, and is shorter.
+- `parallel-review` uses `reviewer` for all three angles, and has reviewers run the
+  diff from a base ref themselves.
+- `fix-pr` finds open threads through GraphQL and trims CI logs.
 
 ### Ideas only, paraphrased and cited in `BENCHMARK.md`
 
@@ -137,6 +180,16 @@ verbatim; `BENCHMARK.md` cites each point back to its source.
 ### Evaluated, not adopted
 
 - `oracle` — overlaps `challenger`.
+- `style-reviewer` — overlaps the built-in `/simplify` and the definition of done's lint
+  run.
+- Commands `plz-ship`, `plz-plan-feature`, `plz-review-loop` — covered by `/orchestrate`
+  and `/parallel-review … autofix`. `plz-security-audit` needs the security trio below;
+  the built-in `/security-review` covers it. `plz-parallel-research` — two `researcher`s
+  plus `Explore` do it without a command. `plz-help` — a router that isn't worth it for
+  four commands. `plz-grill-me` — overlaps built-in clarifying questions, and would
+  rarely be reached for.
+- `preferences/working-rules.md` — already covered by `CLAUDE.md` and the harness, or
+  personal to its author (merge over rebase, humanizer on all output).
 - `humanizer` — third-party (MIT), niche, 473 lines.
 - `ask-questions-if-underspecified` — third-party, CC BY-SA share-alike, overlaps
   built-in clarifying behavior.
@@ -151,5 +204,5 @@ verbatim; `BENCHMARK.md` cites each point back to its source.
   per-machine state that holds project details and conversation transcripts.
 - Skills synced from a claude.ai account — they arrive with the account, and several
   are licensed "all rights reserved".
-- The `caveman` skill — third-party and unlicensed, so install it from its source and
-  put it in `~/.claude/skills/caveman/`.
+- The `caveman` skill and other third-party skills — see `SKILLS.md` for what to
+  install and how.
