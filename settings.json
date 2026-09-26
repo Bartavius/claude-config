@@ -5,6 +5,10 @@
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "disableClaudeAiConnectors": true,
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/statusline.sh"
+  },
   "attribution": {
     "commit": "",
     "pr": ""

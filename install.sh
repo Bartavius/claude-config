@@ -28,6 +28,7 @@ link() {
 cd "$repo"
 link CLAUDE.md
 link settings.json
+link statusline.sh
 for f in agents/*.md commands/*.md; do link "$f"; done
 for f in hooks/*.sh; do link "$f"; done
 for d in skills/*/; do link "${d%/}"; done

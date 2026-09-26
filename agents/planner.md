@@ -1,6 +1,6 @@
 ---
 name: planner
-description: Designs an implementation plan for a multi-file or cross-module change. Use before writing code for anything touching more than ~3 files or more than one package/stack. Read-only — it returns a plan and never edits files.
+description: Designs an implementation plan for a multi-file or cross-module change. Use before writing code for a risky or cross-module change, usually one spanning several files or more than one package/stack. Not for mechanical edits. Read-only — it returns a plan and never edits files.
 tools: Read, Grep, Glob, Bash, WebFetch, WebSearch
 model: claude-opus-5-5
 ---
@@ -24,7 +24,10 @@ Return exactly this:
 3. **Slices** — numbered work units, each with:
    - the exact files it creates or modifies,
    - what it must do, in the repo's terms,
-   - how to verify it (the exact command, and what passing looks like),
+   - how to verify it (the exact command, and what passing looks like), scoped to
+     the slice's own files or tests. Parallel slices share one working tree, so a
+     project-wide check would see other slices' half-finished edits; the full
+     project check runs once after all slices finish,
    - `parallel: yes` only if its file set is disjoint from every other slice marked
      parallel; otherwise `depends on: <slice numbers>`.
 4. **Risks** — what could break, and anything you were unsure about.

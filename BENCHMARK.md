@@ -160,3 +160,141 @@ machinery than they're worth for a personal setup: sandbox mode, a CI run of
 `tests/block-secrets.test.sh`, and a way to turn repeated corrections into rules.
 Built-in `Read(**/.env)` deny rules already cover `cat`/`head`/`tail`/`sed` and `<`
 redirects in Bash, so the hook is a second layer for those, not the only one.
+
+## Round 2: production practice
+
+Added 2026-09-25, on top of `646f5ff`. The first round compared this setup against two
+reference repos. This round asks what Anthropic's Claude Code team and outside
+practitioners actually do. Everything here is paraphrased with links, and no text was
+copied.
+
+### Sources
+
+- **Anthropic:**
+  - [best practices](https://code.claude.com/docs/en/best-practices), [costs](https://code.claude.com/docs/en/costs), [memory](https://code.claude.com/docs/en/memory)
+  - [context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) (2025-09)
+  - [long-running harnesses](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) (2025-11) and [harness design](https://www.anthropic.com/engineering/harness-design-long-running-apps) (2026-03)
+  - Boris Cherny's threads of [2026-01-02](https://threadreaderapp.com/thread/2007179832300581177.html) and [2026-01-31](https://threadreaderapp.com/thread/2017742741636321619.html)
+  - the official plugins in `anthropics/claude-code/plugins`
+- **Practitioners:**
+  - HumanLayer: [CLAUDE.md](https://www.humanlayer.dev/blog/writing-a-good-claude-md) (2025-11) and [ace-fca](https://github.com/humanlayer/advanced-context-engineering-for-coding-agents/blob/main/ace-fca.md) (2025-08)
+  - [Shrivu Shankar](https://blog.sshh.io/p/how-i-use-every-claude-code-feature) (2025-11)
+  - [Mitchell Hashimoto](https://mitchellh.com/writing/my-ai-adoption-journey) (2026-02)
+  - [Simon Willison](https://simonwillison.net/guides/agentic-engineering-patterns/) (2026)
+  - [Armin Ronacher](https://lucumr.pocoo.org/2025/7/30/things-that-didnt-work/) (2025-07)
+  - [Peter Steinberger](https://steipete.me/posts/just-talk-to-it) (2025-10)
+  - [Geoffrey Huntley](https://ghuntley.com/ralph/)
+  - [trailofbits/claude-code-config](https://github.com/trailofbits/claude-code-config)
+  - obra/superpowers and EveryInc/compound-engineering
+  - HN threads 44686726 and 48289950
+
+**Not verified:** x.com was unreachable, so later Boris and Thariq tips are
+secondhand. One example is `CLAUDE_CODE_AUTO_COMPACT_WINDOW=400000`, which compacts
+earlier on a 1M window. Nothing below depends on those tips.
+
+### Where practitioners agree
+
+1. **Verification is the bottleneck.** Give the agent a check it can run, and require
+   evidence, not "done". Separate the agent that writes from the agent that judges,
+   since models praise their own work. (Anthropic best practices and harness
+   design, superpowers `verification-before-completion`, Hashimoto.)
+2. **Tune reviewers so they don't nitpick.** A reviewer told to find gaps always
+   finds some, so ask only for what affects correctness or the requirements.
+   (Anthropic best practices; the official code-review plugin filters by confidence.)
+3. **Short CLAUDE.md, grown from observed mistakes.** HumanLayer aims for under 60
+   lines and Anthropic caps it at 200. Steinberger is the outlier with an ~800-line
+   AGENTS.md.
+4. **Clear, then hand off, rather than repeatedly compacting.** Keep context around
+   40–60% (HumanLayer), and treat compacting twice as a sign the task was too big
+   (Trail of Bits). Also: "after two failed corrections, `/clear` and re-prompt"
+   (Anthropic).
+5. **Keep bulky output out of context.** Filter test output before Claude sees it,
+   send log-heavy work to subagents, and prefer CLIs to MCP (the GitHub MCP measured
+   ~23k tokens). (Anthropic costs, Steinberger, Shrivu.)
+6. **Test first, and run the suite before starting.** (Willison, superpowers, the
+   Anthropic security team.)
+7. **Hooks for what must always hold, and gate at commit time, not on every write.**
+   (Trail of Bits, Shrivu.) Ronacher is the dissent: he finds hooks hard to time and
+   uses PATH shims instead.
+
+**The biggest disagreement is custom subagents.** Shrivu, Ronacher, Steinberger, and
+HN reports find them often unused or chaotic when they mix reads and writes.
+superpowers, compound-engineering, and Anthropic's own plugins lean on them. This
+setup takes the middle position: read-only advisors plus file-disjoint writers only
+under `/orchestrate`, which is the arrangement the skeptics' complaints don't apply to.
+
+### Gaps found, and what was done
+
+| Practice | Before | Change |
+|---|---|---|
+| Watch context size so you clear in time | Nothing showed usage, so the rule couldn't be followed | `statusline.sh` shows model, context % and tokens, and a `/clear` + handoff cue at ≥200k tokens (see the re-score below for why tokens, not percent) |
+| Tune reviewers so they don't nitpick | `reviewer` had a don't-flag list but no overall bar | One line each in `reviewer` and `challenger`: report only what changes correctness, requirements, or a decision |
+| Test-first | Absent | `skills/test-first`: run the suite, write a failing test, watch it fail for the right reason, make the smallest fix, run the full suite |
+| Systematic debugging, and stop after two failed fixes | Absent | `skills/root-cause` plus one line in `CLAUDE.md` |
+| Keep bulky output out of context | Absent | One line in `CLAUDE.md`: quiet flags, `tail`/grep, subagent summaries |
+| Third-party skills | README only noted caveman | `SKILLS.md` lists what to install, with licenses and overlaps |
+
+Scores are unchanged at **45 / 50**. The changes shore up practice inside principles
+2, 5, and 10 without closing the gaps listed above: review outside `/orchestrate`
+still relies on Claude choosing it, and nothing yet turns repeated corrections into
+rules.
+
+**Deliberately not adopted:**
+
+- A PreToolUse hook that rewrites test commands to filter output. It's project
+  specific, and rewriting commands silently hides failures when the grep is wrong.
+- A Stop hook that blocks until tests pass. There's no global test command to gate
+  on.
+- Trail of Bits' "anti-rationalization" Stop hook. It adds a model call every turn.
+- Ralph loops. They cost 20–200x a normal session.
+- Worktree commands. The built-in `isolation: "worktree"` covers them.
+- Brainstorm/interview skills. They overlap built-in clarifying behavior.
+
+### Imports from agents-ecosystem (whole-repo permission)
+
+Added the `researcher` agent and the `/parallel-review` and `/fix-pr` commands,
+rewritten rather than copied. `researcher` closes a real gap: research previously ran
+on `general-purpose`, which can write files, and that broke the rule that only
+implementers write. `/parallel-review` turns orchestration level 2 into a command
+instead of relying on Claude choosing it. That partly addresses the "Not 5" note on
+principle 5. `/fix-pr` covers a routine job nothing else here did.
+
+This brings the setup to 6 agents, one over the guide's sprawl threshold. It's
+accepted because each agent is read-only or scoped, and where triggers overlap the
+routing is written down (see the re-score below). Principle
+1 stays at 4.
+
+## Re-score: fresh-context audit
+
+Done 2026-09-25 by a `challenger` (Opus) that read the working tree cold. It scored
+**43 / 50**, 2 below the 45 above, and found 1 High, 7 Medium, and 2 Low issues. The
+tables in earlier sections, such as "28 lines" and "~65%" under "After changes",
+record the tree at the time they were written and are left as history.
+
+| # | Audit | After fixes | What moved it |
+|---|:-:|:-:|---|
+| 2 Context budget | 4 | **5** | The 40% threshold was the wrong kind of number. 40% of a 1M window is 400k tokens, while practitioners' 40–60% was of roughly 200k windows, about 80–120k. The threshold is now **200k tokens**, in `CLAUDE.md` and in the `statusline.sh` cue, with `/clear` plus a handoff preferred over compacting. |
+| 6 Risk-matched orchestration | 4 | **5** | `CLAUDE.md` had a hard "more than ~3 files → `/orchestrate`" rule that contradicted the risk-based dial. The file count is now a reason to consider `/orchestrate`, not a trigger, and `planner`'s description matches. |
+| Others | — | unchanged | 1=4, 3=5, 4=5, 5=4, 7=4, 8=5, 9=5, 10=3. On 7, the audit notes that "read-only" agents still have Bash, so the one-writer rule is advice, not enforcement. |
+
+The fixes bring it back to **45 / 50**. That score comes from applying the audit's
+fixes, not from a second audit.
+
+Other fixes from the audit:
+
+- **Parallel implementers ran project-wide checks in a shared tree** (High). Slice
+  checks are now scoped to the slice's own files (`planner`). Implementers report
+  errors in other slices' files instead of fixing them, and don't run formatters or
+  `--fix` beyond their own files (`implementer`).
+- **`/orchestrate` now records failing checks before launching**, so pre-existing
+  failures aren't "fixed" as regressions.
+- **Overlapping triggers now have stated routing:**
+  - bugs go to `root-cause` before `test-first`
+  - research goes to `researcher` rather than `general-purpose` (in `CLAUDE.md`)
+  - a diff checked against requirements goes to `reviewer`; otherwise the built-in
+    `/code-review` (orchestrator level 1)
+- **`reviewer` no longer asks for "80-90% when 100% is cheap"** completeness or
+  taste-level nits, which contradicted its own rule to report only what matters.
+- **`/fix-pr` checks for a dirty tree before `gh pr checkout`**, not after.
+- **`HANDOFF.md` is in the global git excludes** (`~/.config/git/ignore`), so
+  `git add -A` can't commit session state.

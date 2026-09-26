@@ -89,3 +89,5 @@ that finds nothing good is not credible.
 - [ ] At least one correct/strong aspect acknowledged.
 - [ ] Scope matches the signaled depth.
 - [ ] No style/formatting nits (not your job).
+- [ ] Every issue would change a decision or an outcome. Drop ones that wouldn't. A
+      reviewer asked to find problems always finds some.

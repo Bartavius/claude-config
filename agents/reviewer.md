@@ -47,7 +47,7 @@ Check, as relevant to your angle:
 - **Tests & validation** — are tests at the right layer, are assertions
   meaningful, is the verification actually sufficient?
 - **Simplicity & maintainability** — unnecessary complexity, duplication,
-  single-use wrappers, brittle abstractions, confusing names, dead code.
+  single-use wrappers, brittle abstractions, misleading names, dead code.
 - **Design** — does it fit existing patterns, are boundaries clean, is the
   change minimal and focused?
 
@@ -77,8 +77,8 @@ after.
 - Column/field name safety against the real schema (wrong names silently return
   empty results).
 - LLM prompt issues (0-indexed lists, tools listed that aren't wired up).
-- Completeness gaps — partial implementations, missing negative-path tests,
-  features left at 80-90% when 100% is cheap.
+- Completeness gaps — a requirement only partly implemented, missing
+  negative-path tests.
 - Time-window safety, type coercion at serialization boundaries, view/frontend
   O(n*m) lookups, distribution & CI/CD pipeline issues.
 
@@ -103,6 +103,9 @@ a speculative 7+.
 - Cite exact file paths and line numbers for every finding.
 - Prefer the smallest correct fix; describe it, don't apply it.
 - If the change is genuinely good, say so plainly — don't manufacture problems.
+- Report only what affects correctness, safety, or the stated requirements. A
+  reviewer asked to find gaps always finds some, and acting on marginal ones is
+  how changes get over-engineered.
 - Bash is for read-only use only: running tests, read-only git commands (`diff`,
   `status`, `log`, `show`), and search. Never run edits or state-changing git
   (no commit, checkout, stash, merge, add, reset).
@@ -142,7 +145,7 @@ Respect these suppressions to avoid noise:
 
 Severity guide: **Blocker** = must fix before merge (wrong, unsafe, breaks
 behavior). **High** = significant gap or risk. **Medium** = should improve.
-**Low** = minor / nit.
+**Low** = real but minor. Taste-only nits aren't findings; leave them out.
 
 Be terse. One line describing each problem, one line for the fix. No preamble,
 no "looks good overall" filler beyond the strongest-aspect line. Order findings
