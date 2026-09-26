@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "model": "opus[1m]",
   "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
+    "CAVEMAN_DEFAULT_MODE": "off"
   },
   "disableClaudeAiConnectors": true,
   "statusLine": {

@@ -23,6 +23,8 @@ the same way, one script at a time. Start a new session and run `/status` and
 - `model: opus[1m]` — Opus with the 1M-token window for the main conversation.
 - `CLAUDE_CODE_SUBAGENT_MODEL: sonnet` — subagents without their own `model` run on
   Sonnet instead of inheriting Opus.
+- `CAVEMAN_DEFAULT_MODE: off` — the caveman plugin otherwise switches every session
+  to terse output at start; with this, it's on only when you invoke it.
 - `disableClaudeAiConnectors` — stops claude.ai connectors from syncing into every
   session. Unused connectors still cost context through their tool listings.
 - `statusLine` — runs `statusline.sh` (below), so context usage is always visible.
