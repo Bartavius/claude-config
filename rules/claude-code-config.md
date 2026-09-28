@@ -17,7 +17,10 @@ rules, settings, `CLAUDE.md`), not an app's own `agents/` or `commands/` code.
 - Read-only agents get an explicit `tools:` list with no Write or Edit. Leave `tools`
   unset only when the agent really needs everything.
 - Pick `model` on purpose: Opus for planning and judgment, Sonnet for implementation,
-  Haiku for search. An agent with no `model` runs on `CLAUDE_CODE_SUBAGENT_MODEL`.
+  Haiku for search. Use the full IDs `claude-opus-5-5` and `claude-sonnet-5-5`, not
+  the `opus`/`sonnet` aliases. An agent with no `model` runs on
+  `CLAUDE_CODE_SUBAGENT_MODEL`. Set `effort` only where the default (`medium`) is too low, such as planning or
+  adversarial review. Haiku 4.5 doesn't support `effort`.
 - Subagents do not see the conversation. An agent's prompt must say what it gets, what
   it may touch, and what it returns.
 - Skills: keep `allowed-tools` as narrow as the job allows (`Bash(git status:*)`, not

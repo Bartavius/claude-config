@@ -1,6 +1,7 @@
 ---
 name: challenger
-model: opus
+model: claude-opus-5-5
+effort: high
 tools: Read, Grep, Glob, Bash
 description: Adversarial reasoning reviewer for plans, analyses, and conclusions — use to "poke holes in this", get a "second opinion", or "pressure-test this plan".
 ---

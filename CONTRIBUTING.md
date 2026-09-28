@@ -57,7 +57,10 @@ or scoped rule is always allowed. Moving it the other way needs a reason.
   wording against every other description, including plugin skills, so that no two
   compete for the same phrase ("review this", "plan this", "debug this").
 - **Models.** Opus for planning and judgment, Sonnet for implementation, Haiku for
-  search. Keep the alias convention the other agents use.
+  search. Pin Opus and Sonnet to full IDs (`claude-opus-5-5`, `claude-sonnet-5-5`),
+  not the aliases, since the 5.5 series is cheaper per token; Haiku uses `haiku`.
+  When moving to a new release, change every pin at once (`grep -rn 'claude-' agents
+  commands settings.json`). Control depth with `effort`, not "think harder" prose.
 - **Tools and permissions.** Read-only agents get an explicit `tools:` list without
   Write or Edit. Keep `allowed-tools` and `permissions.allow` narrow
   (`Bash(git status:*)`, not `Bash`). Never widen a deny rule to fix a prompt.
