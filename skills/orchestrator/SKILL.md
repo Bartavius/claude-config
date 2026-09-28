@@ -12,7 +12,7 @@ delegation clearly adds value. Favor code quality and review over machinery.
 
 ## The control dial
 
-Match effort to risk. Do not escalate past what the task needs.
+Match the orchestration level to risk. Do not escalate past what the task needs.
 
 | Level | When | Action |
 |-------|------|--------|

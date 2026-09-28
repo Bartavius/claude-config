@@ -20,9 +20,14 @@ the same way, one script at a time. Start a new session and run `/status` and
 
 **`settings.json`**
 
-- `model: opus[1m]` — Opus with the 1M-token window for the main conversation.
-- `CLAUDE_CODE_SUBAGENT_MODEL: sonnet` — subagents without their own `model` run on
-  Sonnet instead of inheriting Opus.
+- `model: claude-opus-5-5[1m]` — Opus 5.5 with the 1M-token window for the main
+  conversation. Effort is left at Claude Code's default (`medium`); change it per
+  session with `/effort`.
+- `CLAUDE_CODE_SUBAGENT_MODEL: claude-sonnet-5-5` — subagents without their own `model`
+  run on Sonnet 5.5 instead of inheriting Opus.
+- Opus and Sonnet are pinned to the 5.5 IDs rather than the `opus`/`sonnet` aliases,
+  because the 5.5 series is cheaper per token; a pin keeps it that way when a new
+  release moves the alias. Update the IDs by hand when switching.
 - `CAVEMAN_DEFAULT_MODE: off` — the caveman plugin otherwise switches every session
   to terse output at start; with this, it's on only when you invoke it.
 - `disableClaudeAiConnectors` — stops claude.ai connectors from syncing into every
@@ -61,18 +66,18 @@ of a 1M window.
 **`agents/`** — plan with the strongest model, execute and search with cheaper ones,
 and verify with a fresh context that didn't write the code.
 
-- `planner` — Opus 5.5 (pinned to `claude-opus-5-5`), read-only. Returns goal,
+- `planner` — Opus 5.5 at `effort: high`, read-only. Returns goal,
   shared contracts, and file-disjoint slices, each with a verification command.
-- `implementer` — Sonnet. Builds one slice, touches only its files, reports the real
+- `implementer` — Sonnet 5.5. Builds one slice, touches only its files, reports the real
   verification result.
 - `Explore` — Haiku, read-only, skips loading `CLAUDE.md`. Replaces the built-in
   Explore, which otherwise runs on the main conversation's model.
-- `reviewer` — Sonnet, read-only, fresh context. Given the requirements and a base
+- `reviewer` — Sonnet 5.5, read-only, fresh context. Given the requirements and a base
   ref, it runs the diff itself and returns pass/fail/unverified per requirement with
   evidence, instead of trusting the implementer's own account of the work.
-- `challenger` — Opus, read-only. Pressure-tests a plan, an analysis, or a piece of
+- `challenger` — Opus 5.5 at `effort: high`, read-only. Pressure-tests a plan, an analysis, or a piece of
   reasoning before it's acted on — not line-level code.
-- `researcher` — Sonnet, read-only, with web access. Returns a short brief on external
+- `researcher` — Sonnet 5.5, read-only, with web access. Returns a short brief on external
   docs, APIs, licenses, or how others do something. Each finding has a source and date,
   and is marked verified or secondhand. It exists so research doesn't need
   `general-purpose`, which can write files.

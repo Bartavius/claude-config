@@ -3,6 +3,7 @@ name: planner
 description: Designs an implementation plan for a multi-file or cross-module change. Use before writing code for a risky or cross-module change, usually one spanning several files or more than one package/stack. Not for mechanical edits. Read-only — it returns a plan and never edits files.
 tools: Read, Grep, Glob, Bash, WebFetch, WebSearch
 model: claude-opus-5-5
+effort: high
 ---
 
 You design implementation plans. You do not write code.

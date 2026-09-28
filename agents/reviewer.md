@@ -1,6 +1,6 @@
 ---
 name: reviewer
-model: sonnet
+model: claude-sonnet-5-5
 tools: Read, Grep, Glob, Bash
 description: Adversarial code reviewer for diffs and requirements checklists — use to "review this diff" or "check this against the requirements".
 ---

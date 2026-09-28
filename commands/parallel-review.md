@@ -24,7 +24,7 @@ Target and options: $ARGUMENTS
      Read any untracked files
 
    Don't pass them the author's reasoning or this conversation's account of the
-   change. Use `model: opus` for high-risk changes.
+   change. Use `model: claude-opus-5-5` for high-risk changes.
 
 4. **Synthesize.** Don't concatenate their reports. Sort every finding into:
    - **Fix now:** blockers, and anything clearly worth it
