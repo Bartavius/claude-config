@@ -106,7 +106,12 @@ writer at a time. `test-first` runs a red/green loop: a test has to fail for the
 reason before any code is written, and the full suite runs at the end. `root-cause` goes
 reproduce → narrow → one hypothesis at a time → fix the root cause, and stops after two
 failed fixes. Both exist because verification, not code generation, is where agent
-output usually goes wrong (see `BENCHMARK.md` principle 5).
+output usually goes wrong (see `BENCHMARK.md` principle 5). `finetune` (run as
+`/finetune <model id> [role]`) turns the 5.5 migration into a repeatable pass for the
+next model: facts from current docs, every pin changed at once, prose the model no
+longer needs cut, guards added only for documented failure modes, and a bytes
+before/after report. It is invoke-only, so it doesn't compete with `claude-api` for
+"model migration".
 
 **`statusline.sh`** — shows the model, the directory, and how much of the context
 window is used (percent and tokens), and adds a `/clear` + handoff cue at 200k tokens, the
