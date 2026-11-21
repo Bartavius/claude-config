@@ -113,6 +113,16 @@ longer needs cut, guards added only for documented failure modes, and a bytes
 before/after report. It is invoke-only, so it doesn't compete with `claude-api` for
 "model migration".
 
+`ui-design` is for building and reviewing web UI on shadcn/ui + Tailwind v4 + lucide. It
+uses semantic tokens only, picks laws by situation and settles conflicts by evidence rank
+(standard > empirical > … > folk), and runs a pre-ship checklist. It is distilled from
+[design-library](https://github.com/Bartavius/design-library) (snapshot `276477e`) and
+queries that repo directly when it is checked out at `~/Desktop/projects/design-library`.
+It ships no code. To check rendered pages it uses whatever browser tool the session has,
+such as `claude-in-chrome`. It exists because the same browser-checking lessons
+(dark-mode emulation, focus order versus `grid-flow-dense`, stale Tailwind CSS) were
+relearned in two sessions of design work.
+
 **`statusline.sh`** — shows the model, the directory, and how much of the context
 window is used (percent and tokens), and adds a `/clear` + handoff cue at 200k tokens, the
 threshold `CLAUDE.md` sets. Without it, that threshold can't be seen. Needs `jq`.
